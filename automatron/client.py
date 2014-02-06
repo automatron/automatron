@@ -181,13 +181,13 @@ class ClientFactory(protocol.ClientFactory):
         self.config = config
 
     def buildProtocol(self, addr):
-        log.msg('setting up connection to %s' % addr)
+        log.msg('Setting up connection to %s' % addr)
         return Client(self.controller, self.server, self.config)
 
     def clientConnectionLost(self, connector, reason):
-        log.msg('connection lost (%s), reconnecting' % reason)
+        log.msg('Connection lost (%s), reconnecting' % reason)
         connector.connect()
 
     def clientConnectionFailed(self, connector, reason):
-        log.msg('connection failed (%s), reconnecting in 10s' % reason)
+        log.msg('Connection failed (%s), reconnecting in 10s' % reason)
         reactor.callLater(10000, connector.connect)
