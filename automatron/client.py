@@ -51,7 +51,7 @@ class Client(irc.IRCClient):
         self.emit('connection_lost', reason)
 
     def receivedMOTD(self, motd):
-        log.msg('MOTD:\n%s' % motd)
+        log.msg('MOTD:\n%s' % '\n'.join(motd))
         self.emit('server_motd', motd)
 
     def created(self, when):
