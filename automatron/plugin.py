@@ -6,6 +6,8 @@ import zope.interface.verify
 
 
 class IAutomatronPluginFactory(IPlugin):
+    name = zope.interface.Attribute("""The name of this plugin""")
+
     def __call__(controller):
         """
         Create a new controller.

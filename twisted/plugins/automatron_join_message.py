@@ -9,6 +9,8 @@ class JoinMessagePlugin(object):
     classProvides(IAutomatronPluginFactory)
     implements(IAutomatronChannelJoinedHandler)
 
+    name = 'join_message'
+
     def __init__(self, controller):
         self.controller = controller
 

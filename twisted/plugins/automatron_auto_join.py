@@ -9,6 +9,8 @@ class AutoJoinPlugin(object):
     classProvides(IAutomatronPluginFactory)
     implements(IAutomatronSignedOnHandler)
 
+    name = 'auto_join'
+
     def __init__(self, controller):
         self.controller = controller
 
