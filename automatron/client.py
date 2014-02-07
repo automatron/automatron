@@ -46,7 +46,7 @@ class Client(irc.IRCClient):
         self.emit('connection_made')
 
     def connectionLost(self, reason):
-        log.msg('Connection lost' % self.server)
+        log.msg('Connection lost')
         irc.IRCClient.connectionLost(self, reason)
         self.emit('connection_lost', reason)
 
