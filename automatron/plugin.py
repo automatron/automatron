@@ -220,6 +220,12 @@ class PluginManager(object):
         self.plugins = []
         plugin_classes = list(getPlugins(IAutomatronPluginFactory))
         for plugin_class in plugin_classes:
+            try:
+                zope.interface.verify.verifyObject(IAutomatronPluginFactory, plugin_class)
+            except (zope.interface.verify.BrokenImplementation, zope.interface.verify.BrokenMethodImplementation) as e:
+                print >>sys.stderr, 'Invalid plugin: %s' % plugin_class.__name__
+                print >>sys.stderr, e
+                continue
             for iface in zope.interface.implementedBy(plugin_class):
                 if iface.extends(IAutomatronEventHandler):
                     try:
