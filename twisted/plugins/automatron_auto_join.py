@@ -10,6 +10,7 @@ class AutoJoinPlugin(object):
     implements(IAutomatronSignedOnHandler)
 
     name = 'auto_join'
+    priority = 100
 
     def __init__(self, controller):
         self.controller = controller

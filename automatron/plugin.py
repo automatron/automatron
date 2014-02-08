@@ -6,7 +6,8 @@ import zope.interface.verify
 
 
 class IAutomatronPluginFactory(IPlugin):
-    name = zope.interface.Attribute("""The name of this plugin""")
+    name = zope.interface.Attribute("""The name of this plugin.""")
+    priority = zope.interface.Attribute("""The priority with which the plugin will be executed.""")
 
     def __call__(controller):
         """
@@ -219,7 +220,7 @@ class PluginManager(object):
         self.reload()
 
     def reload(self):
-        self.plugins = []
+        plugins = []
         plugin_classes = list(getPlugins(IAutomatronPluginFactory))
         for plugin_class in plugin_classes:
             try:
@@ -237,7 +238,8 @@ class PluginManager(object):
                         print >>sys.stderr, e
                         break
             else:
-                self.plugins.append(plugin_class(self.controller))
+                plugins.append(plugin_class(self.controller))
+        self.plugins = sorted(plugins, key=lambda i: i.priority)
 
     def emit(self, event, *args):
         method = 'on_%s' % event

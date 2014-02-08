@@ -10,6 +10,7 @@ class JoinMessagePlugin(object):
     implements(IAutomatronChannelJoinedHandler)
 
     name = 'join_message'
+    priority = 100
 
     def __init__(self, controller):
         self.controller = controller
