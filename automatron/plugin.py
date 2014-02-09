@@ -59,6 +59,16 @@ class PluginManager(object):
                                 (event.getName(), event_interface)
             return
 
+        if len(args) < len(event.required):
+            print >>sys.stderr, 'Emitted event %s\'s declaration requires at least %d arguments, only %d were ' \
+                                'provided.' % (event.getName(), len(event.required), len(args))
+            return
+
+        if len(args) > len(event.positional):
+            print >>sys.stderr, 'Emitted event %s\'s declaration requires at most %d arguments, %d were ' \
+                                'provided.' % (event.getName(), len(event.positional), len(args))
+            return
+
         for plugin in self.plugins:
             try:
                 plugin_adapter = event_interface(plugin)
