@@ -172,7 +172,7 @@ class Client(irc.IRCClient):
         self.emit(IAutomatronPongHandler['on_pong'], user, secs)
 
 
-class ClientFactory(protocol.ClientFactory):
+class ClientFactory(protocol.ReconnectingClientFactory):
     def logPrefix(self):
         return self.server
 
@@ -183,15 +183,16 @@ class ClientFactory(protocol.ClientFactory):
 
     def buildProtocol(self, addr):
         log.msg('Setting up connection to %s' % addr)
+        self.resetDelay()
         return Client(self.controller, self.server, self.config)
 
     def clientConnectionLost(self, connector, reason):
-        log.msg('Connection lost (%s), reconnecting' % reason)
-        connector.connect()
+        log.msg('Connection lost (%s)' % reason)
+        protocol.ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
 
     def clientConnectionFailed(self, connector, reason):
-        log.msg('Connection failed (%s), reconnecting in 10s' % reason)
-        reactor.callLater(10000, connector.connect)
+        log.msg('Connection failed (%s)' % reason)
+        protocol.ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
 
 
 class IAutomatronConnectionMadeHandler(IAutomatronEventHandler):
