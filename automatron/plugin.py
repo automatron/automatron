@@ -40,10 +40,10 @@ class PluginManager(object):
                 print >>sys.stderr, 'Invalid plugin: %s' % plugin_class.__name__
                 print >>sys.stderr, e
                 continue
-            for iface in zope.interface.implementedBy(plugin_class):
-                if iface.extends(IAutomatronEventHandler):
+            for event_interface in zope.interface.implementedBy(plugin_class):
+                if event_interface.extends(IAutomatronEventHandler):
                     try:
-                        zope.interface.verify.verifyClass(iface, plugin_class)
+                        zope.interface.verify.verifyClass(event_interface, plugin_class)
                     except zope.interface.verify.BrokenMethodImplementation as e:
                         print >>sys.stderr, 'Invalid plugin: %s' % plugin_class
                         print >>sys.stderr, e
@@ -53,10 +53,18 @@ class PluginManager(object):
         self.plugins = sorted(plugins, key=lambda i: i.priority)
 
     def emit(self, event, *args):
-        method = 'on_%s' % event
+        event_interface = event.interface
+        if not event_interface.extends(IAutomatronEventHandler):
+            print >>sys.stderr, 'Emitted event %s\'s interface (%s) does not extend IAutomatronEventHandler' % \
+                                (event.getName(), event_interface)
+            return
+
         for plugin in self.plugins:
-            for iface in zope.interface.providedBy(plugin):
-                if iface.extends(IAutomatronEventHandler) and method in iface:
-                    f = getattr(plugin, method)
-                    if f(*args) is STOP:
-                        break
+            try:
+                plugin_adapter = event_interface(plugin)
+            except TypeError:
+                continue
+
+            f = getattr(plugin_adapter, event.getName())
+            if f(*args) is STOP:
+                break
