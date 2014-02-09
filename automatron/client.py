@@ -230,7 +230,7 @@ class IAutomatronServerHostHandler(IAutomatronEventHandler):
 
 
 class IAutomatronServerInfoHandler(IAutomatronEventHandler):
-    def on_server_info(client, info):
+    def on_server_info(client, servername, version, umodes, cmodes):
         """
         Called when the server tells us its basic information
         """
@@ -314,7 +314,7 @@ class IAutomatronChannelKickedHandler(IAutomatronEventHandler):
 
 
 class IAutomatronChannelTopicChangedHandler(IAutomatronEventHandler):
-    def on_channel_topic_changed(client, topic):
+    def on_channel_topic_changed(client, user, channel, new_topic):
         """
         Called when the topic of a room we're in changes.
         """
