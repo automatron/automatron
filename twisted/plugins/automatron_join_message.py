@@ -1,5 +1,6 @@
 from zope.interface import implements, classProvides
-from automatron.plugin import IAutomatronPluginFactory, IAutomatronChannelJoinedHandler
+from automatron.plugin import IAutomatronPluginFactory
+from automatron.client import IAutomatronChannelJoinedHandler
 
 
 SECTION = 'plugins.join_message'
