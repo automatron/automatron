@@ -1,9 +1,7 @@
+from twisted.internet import defer
 from zope.interface import implements, classProvides
 from automatron.plugin import IAutomatronPluginFactory
 from automatron.client import IAutomatronSignedOnHandler
-
-
-SECTION = 'plugins.auto_join'
 
 
 class AutoJoinPlugin(object):
@@ -16,12 +14,9 @@ class AutoJoinPlugin(object):
     def __init__(self, controller):
         self.controller = controller
 
+    @defer.inlineCallbacks
     def on_signed_on(self, client):
-        section = self.controller.find_config_section(SECTION, client.server)
-        if section is None:
-            return
-
-        if self.controller.config.has_option(section, 'join'):
-            channels = self.controller.config.get(section, 'join').split(',')
-            for channel in channels:
+        channels, _ = yield self.controller.get_plugin_config_value(self, client.server, None, 'join')
+        if channels is not None:
+            for channel in channels.split(','):
                 client.join(channel.strip())

@@ -55,12 +55,6 @@ class Controller(MultiService):
 
         MultiService.startService(self)
 
-    def find_config_section(self, *pieces):
-        for i in range(1, len(pieces) + 1):
-            section = '.'.join(['%s'] * i) % pieces[:i]
-            if self.config.has_section(section):
-                return section
-
     @defer.inlineCallbacks
     def get_config_section(self, section, server, channel):
         q = ["""
@@ -101,3 +95,45 @@ class Controller(MultiService):
             section[key] = val
 
         defer.returnValue(section)
+
+    @defer.inlineCallbacks
+    def get_config_value(self, section, server, channel, key):
+        q = ["""
+            SELECT
+                value,
+                CASE
+                    WHEN channel IS NOT NULL AND server IS NOT NULL THEN 3
+                    WHEN channel IS NOT NULL THEN 2
+                    WHEN server IS NOT NULL THEN 1
+                    ELSE 0
+                END AS relevance
+            FROM
+                config
+            WHERE
+                section = %s
+                AND key = %s
+        """]
+        args = [section, key]
+
+        if server is not None:
+            q.append('AND (server IS NULL OR server = %s)')
+            args.append(server)
+        else:
+            q.append('AND server IS NULL')
+
+        if channel is not None:
+            q.append('AND (channel IS NULL OR channel = %s)')
+            args.append(channel)
+        else:
+            q.append('AND channel IS NULL')
+
+        q.append('ORDER BY relevance DESC LIMIT 1')
+
+        result = yield self.database.runQuery(' '.join(q), args)
+        if result:
+            defer.returnValue(result[0])
+        else:
+            defer.returnValue((None, None))
+
+    def get_plugin_config_value(self, plugin, server, channel, key):
+        return self.get_config_value('plugin.%s' % plugin.name, server, channel, key)
