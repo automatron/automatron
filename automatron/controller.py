@@ -39,6 +39,10 @@ class Controller(MultiService):
                     config
                 WHERE
                     section = 'server'
+                    AND server IS NOT NULL
+                    AND channel IS NULL
+                    AND key = 'hostname'
+                    AND value IS NOT NULL
             '''
         )
         servers = [s[0] for s in result]
