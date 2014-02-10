@@ -9,5 +9,4 @@ class Options(usage.Options):
 
 
 def makeService(options):
-    controller = Controller(options['config'])
-    return controller()
+    return Controller(options['config'])
