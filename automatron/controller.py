@@ -3,6 +3,7 @@ from twisted.application import internet
 from twisted.application.service import MultiService
 from twisted.enterprise import adbapi
 from twisted.internet import defer
+from twisted.python import log
 from automatron.client import ClientFactory
 from automatron.plugin import PluginManager
 
@@ -46,6 +47,9 @@ class Controller(MultiService):
             '''
         )
         servers = [s[0] for s in result]
+
+        if not servers:
+            log.msg('Warning: No server configurations defined.')
 
         # Set up client connections
         for server in servers:
