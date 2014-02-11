@@ -16,8 +16,8 @@ class JoinMessagePlugin(object):
 
     @defer.inlineCallbacks
     def on_channel_joined(self, client, channel):
-        message, message_rel = yield self.controller.get_plugin_config_value(self, client.server, channel, 'message')
-        action, action_rel = yield self.controller.get_plugin_config_value(self, client.server, channel, 'action')
+        message, message_rel = yield self.controller.config.get_plugin_value(self, client.server, channel, 'message')
+        action, action_rel = yield self.controller.config.get_plugin_value(self, client.server, channel, 'action')
 
         if message is not None and (action is None or message_rel > action_rel):
             f = client.msg

@@ -16,7 +16,7 @@ class AutoJoinPlugin(object):
 
     @defer.inlineCallbacks
     def on_signed_on(self, client):
-        channels, _ = yield self.controller.get_plugin_config_value(self, client.server, None, 'join')
+        channels, _ = yield self.controller.config.get_plugin_value(self, client.server, None, 'join')
         if channels is not None:
             for channel in channels.split(','):
                 client.join(channel.strip())
