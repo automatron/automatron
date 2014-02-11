@@ -1,3 +1,4 @@
+from twisted.internet import defer
 from twisted.plugin import getPlugins, IPlugin
 from twisted.python import log
 import zope.interface
@@ -52,6 +53,7 @@ class PluginManager(object):
                 log.msg('Loaded plugin %s' % plugin_class.name)
         self.plugins = sorted(plugins, key=lambda i: i.priority)
 
+    @defer.inlineCallbacks
     def emit(self, event, *args):
         event_interface = event.interface
         if not event_interface.extends(IAutomatronEventHandler):
@@ -76,5 +78,5 @@ class PluginManager(object):
                 continue
 
             f = getattr(plugin_adapter, event.getName())
-            if f(*args) is STOP:
+            if (yield defer.maybeDeferred(f, *args)) is STOP:
                 break
