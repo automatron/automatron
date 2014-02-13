@@ -1,6 +1,6 @@
 import random
 import re
-from twisted.internet import protocol, reactor
+from twisted.internet import protocol
 from twisted.words.protocols import irc
 from twisted.python import log
 from automatron.plugin import IAutomatronEventHandler
