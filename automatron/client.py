@@ -7,7 +7,7 @@ from automatron.plugin import IAutomatronEventHandler
 
 i = random.randrange(10000)
 DEFAULT_NICKNAME = 'automatron%d,automatron%d_,automatron%d__' % (i, i, i)
-DEFAULT_REALNAME = 'Automatron %d' % i
+DEFAULT_REALNAME = 'Automatron IRC bot'
 USER_RE = re.compile(r'(.*?)!(.*?)@(.*)')
 
 
