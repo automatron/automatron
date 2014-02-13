@@ -39,8 +39,34 @@ ALTER TABLE ONLY config ALTER COLUMN id SET DEFAULT nextval('config_id_seq'::reg
 
 
 --
--- Name: config_section_server_channel_key_key; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: config_section_channel_key_idx; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
-ALTER TABLE ONLY config
-    ADD CONSTRAINT config_section_server_channel_key_key UNIQUE (section, server, channel, key);
+CREATE UNIQUE INDEX config_section_channel_key_idx ON config USING btree (section, channel, key) WHERE ((server IS NULL) AND (channel IS NOT NULL));
+
+
+--
+-- Name: config_section_key_idx; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE UNIQUE INDEX config_section_key_idx ON config USING btree (section, key) WHERE ((server IS NULL) AND (channel IS NULL));
+
+
+--
+-- Name: config_section_server_channel_key_idx; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE UNIQUE INDEX config_section_server_channel_key_idx ON config USING btree (section, server, channel, key) WHERE ((server IS NOT NULL) AND (channel IS NOT NULL));
+
+
+--
+-- Name: config_section_server_key_idx; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE UNIQUE INDEX config_section_server_key_idx ON config USING btree (section, server, key) WHERE ((server IS NOT NULL) AND (channel IS NULL));
+
+
+--
+-- PostgreSQL database dump complete
+--
+
