@@ -35,7 +35,7 @@ class ConfigManager(object):
         ])
     @defer.inlineCallbacks
     def get_section(self, section, server, channel):
-        q = ["""
+        q = """
             SELECT
                 key,
                 value,
@@ -49,24 +49,12 @@ class ConfigManager(object):
                 config
             WHERE
                 section = %s
-        """]
-        args = [section]
-
-        if server is not None:
-            q.append('AND (server IS NULL OR server = %s)')
-            args.append(server)
-        else:
-            q.append('AND server IS NULL')
-
-        if channel is not None:
-            q.append('AND (channel IS NULL OR channel = %s)')
-            args.append(channel)
-        else:
-            q.append('AND channel IS NULL')
-
-        q.append('ORDER BY relevance ASC')
-
-        result = yield self.database.runQuery(' '.join(q), args)
+                AND (server IS NULL OR server = %s)
+                AND (channel IS NULL OR channel = %s)
+            ORDER BY
+                relevance ASC
+        """
+        result = yield self.database.runQuery(q, (section, server, channel))
 
         section = {}
         for key, val, relevance in result:
@@ -79,7 +67,7 @@ class ConfigManager(object):
 
     @defer.inlineCallbacks
     def get_value(self, section, server, channel, key):
-        q = ["""
+        q = """
             SELECT
                 value,
                 CASE
@@ -92,25 +80,15 @@ class ConfigManager(object):
                 config
             WHERE
                 section = %s
+                AND (server IS NULL OR server = %s)
+                AND (channel IS NULL OR channel = %s)
                 AND key = %s
-        """]
-        args = [section, key]
+            ORDER BY
+                relevance DESC
+            LIMIT 1
+        """
+        result = yield self.database.runQuery(q, (section, server, channel, key))
 
-        if server is not None:
-            q.append('AND (server IS NULL OR server = %s)')
-            args.append(server)
-        else:
-            q.append('AND server IS NULL')
-
-        if channel is not None:
-            q.append('AND (channel IS NULL OR channel = %s)')
-            args.append(channel)
-        else:
-            q.append('AND channel IS NULL')
-
-        q.append('ORDER BY relevance DESC LIMIT 1')
-
-        result = yield self.database.runQuery(' '.join(q), args)
         if result:
             defer.returnValue(result[0])
         else:
