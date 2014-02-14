@@ -31,4 +31,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=requires,
+    data_files=[
+        ('share/doc/automatron/postgresql', ['doc/postgresql/config.sql']),
+    ],
 )
