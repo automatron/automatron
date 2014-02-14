@@ -14,8 +14,11 @@ class JoinMessagePlugin(object):
     def __init__(self, controller):
         self.controller = controller
 
-    @defer.inlineCallbacks
     def on_channel_joined(self, client, channel):
+        return self._on_channel_joined(client, channel)
+
+    @defer.inlineCallbacks
+    def _on_channel_joined(self, client, channel):
         message, message_rel = yield self.controller.config.get_plugin_value(self, client.server, channel, 'message')
         action, action_rel = yield self.controller.config.get_plugin_value(self, client.server, channel, 'action')
 
