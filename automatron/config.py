@@ -33,6 +33,7 @@ class ConfigManager(object):
                 '''
             ))
         ])
+
     @defer.inlineCallbacks
     def get_section(self, section, server, channel):
         q = """
@@ -100,37 +101,58 @@ class ConfigManager(object):
     @defer.inlineCallbacks
     def update_value(self, section, server, channel, key, new_value):
         _, relevance = yield self.get_value(section, server, channel, key)
-        if relevance == 2:
-            server = None
-        elif relevance == 1:
-            channel = None
-        elif relevance == 0:
-            server = channel = None
+        if relevance is not None:
+            if relevance == 2:
+                server = None
+            elif relevance == 1:
+                channel = None
+            elif relevance == 0:
+                server = channel = None
 
-        q = ["""
-            UPDATE
-                config
-            SET
-                value = %s
-            WHERE
-                section = %s
-                AND key = %s
-        """]
-        params = [new_value, section, key]
+            q = ["""
+                UPDATE
+                    config
+                SET
+                    value = %s
+                WHERE
+                    section = %s
+                    AND key = %s
+            """]
+            params = [new_value, section, key]
 
-        if server is not None:
-            q.append('AND server = %s')
-            params.append(server)
+            if server is not None:
+                q.append('AND server = %s')
+                params.append(server)
+            else:
+                q.append('AND server IS NULL')
+
+            if channel is not None:
+                q.append('AND channel = %s')
+                params.append(channel)
+            else:
+                q.append('AND channel IS NULL')
         else:
-            q.append('AND server IS NULL')
+            q = ["""
+                INSERT INTO
+                    config
+                    (
+                        section,
+                        server,
+                        channel,
+                        key,
+                        value
+                    )
+                VALUES (
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s
+                )
+            """]
+            params = [section, server, channel, key, new_value]
 
-        if channel is not None:
-            q.append('AND channel = %s')
-            params.append(channel)
-        else:
-            q.append('AND channel IS NULL')
-
-        yield self.database.runOperation(' '.join(q), params)
+        self.database.runOperation(' '.join(q), params)
 
     def update_plugin_value(self, plugin, server, channel, key, new_value):
         return self.update_value('plugin.%s' % plugin.name, server, channel, key, new_value)
