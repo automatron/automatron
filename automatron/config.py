@@ -156,3 +156,60 @@ class ConfigManager(object):
 
     def update_plugin_value(self, plugin, server, channel, key, new_value):
         return self.update_value('plugin.%s' % plugin.name, server, channel, key, new_value)
+
+    @defer.inlineCallbacks
+    def get_username_by_hostmask(self, server, user):
+        q = """
+            SELECT
+                value,
+                CASE
+                    WHEN server IS NOT NULL THEN 1
+                    ELSE 0
+                END AS relevance
+            FROM
+                config
+            WHERE
+                section = 'user.hostmask'
+                AND (server IS NULL OR server = %s)
+                AND %s LIKE key
+            ORDER BY
+                relevance
+            LIMIT 1
+        """
+        result = yield self.database.runQuery(q, (server, user))
+        if result:
+            defer.returnValue(result[0])
+        else:
+            defer.returnValue((None, None))
+
+    @defer.inlineCallbacks
+    def get_role_by_username(self, server, channel, username):
+        defer.returnValue((yield self.get_value('user.role', server, channel, username)))
+
+    @defer.inlineCallbacks
+    def get_permissions_by_role(self, role):
+        permissions, _ = yield self.get_value('role.permissions', None, None, role)
+        if permissions is None:
+            defer.returnValue(None)
+
+        permissions = [p.strip() for p in permissions.split(',')]
+        defer.returnValue(permissions)
+
+    @defer.inlineCallbacks
+    def has_permission(self, server, channel, user, permission):
+        username, username_rel = yield self.get_username_by_hostmask(server, user)
+        if username is None:
+            defer.returnValue(False)
+
+        role, role_rel = yield self.get_role_by_username(server, channel, username)
+        if role is None:
+            defer.returnValue(False)
+
+        if role_rel < username_rel:
+            defer.returnValue(False)
+
+        permissions = yield self.get_permissions_by_role(role)
+        if permissions is None:
+            defer.returnValue(False)
+
+        defer.returnValue(bool({'*', permission} & set(permissions)))
