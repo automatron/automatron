@@ -77,4 +77,4 @@ class PluginManager(object):
 
             f = getattr(plugin_adapter, event.getName())
             if (yield defer.maybeDeferred(f, *args)) is STOP:
-                break
+                defer.returnValue(STOP)
