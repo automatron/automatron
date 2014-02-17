@@ -213,3 +213,32 @@ class ConfigManager(object):
             defer.returnValue(False)
 
         defer.returnValue(bool({'*', permission} & set(permissions)))
+
+    @defer.inlineCallbacks
+    def get_user_preference(self, server, username, preference):
+        value, _ = yield self.get_value('user.pref', server, username, preference)
+        defer.returnValue(value)
+
+    @defer.inlineCallbacks
+    def update_user_preference(self, server, username, preference, value):
+        q = """
+            SELECT
+                CASE
+                    WHEN server IS NOT NULL THEN 1
+                    ELSE 0
+                END AS relevance
+            FROM
+                config
+            WHERE
+                section = 'user.hostmask'
+                AND (server IS NULL OR server = %s)
+                AND value = %s
+            ORDER BY
+                relevance
+            LIMIT 1
+        """
+        result = yield self.database.runQuery(q, (server, username))
+        if result:
+            if result[0][0] == 0:
+                server = None
+        self.update_value('user.pref', server, username, preference, value)
