@@ -1,12 +1,18 @@
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 from zope.interface import implements, classProvides
 from automatron.plugin import IAutomatronPluginFactory
-from automatron.client import IAutomatronSignedOnHandler
+from automatron.client import IAutomatronSignedOnHandler, IAutomatronChannelJoinedHandler,\
+    IAutomatronChannelLeftHandler, IAutomatronChannelKickedHandler
 
 
 class AutoJoinPlugin(object):
     classProvides(IAutomatronPluginFactory)
-    implements(IAutomatronSignedOnHandler)
+    implements(
+        IAutomatronSignedOnHandler,
+        IAutomatronChannelJoinedHandler,
+        IAutomatronChannelLeftHandler,
+        IAutomatronChannelKickedHandler,
+    )
 
     name = 'auto_join'
     priority = 100
@@ -23,3 +29,38 @@ class AutoJoinPlugin(object):
         if channels is not None:
             for channel in channels.split(','):
                 client.join(channel.strip())
+
+    def on_channel_joined(self, client, channel):
+        self._on_channel_joined(client, channel)
+
+    @defer.inlineCallbacks
+    def _on_channel_joined(self, client, channel):
+        track, _ = yield self.controller.config.get_plugin_value(self, client.server, None, 'track')
+        if track == 'false':
+            return
+
+        channels, channels_rel = yield self.controller.config.get_plugin_value(self, client.server, None, 'join')
+        if channels_rel is None or channels_rel > 0:
+            channels = [c.strip() for c in (channels or '').split(',') if c.strip()]
+            if not channel in channels:
+                channels.append(channel)
+                self.controller.config.update_plugin_value(self, client.server, None, 'join', ','.join(channels))
+
+    def on_channel_left(self, client, channel):
+        self._on_channel_left(client, channel)
+
+    @defer.inlineCallbacks
+    def _on_channel_left(self, client, channel):
+        track, _ = yield self.controller.config.get_plugin_value(self, client.server, None, 'track')
+        if track == 'false':
+            return
+
+        channels, channels_rel = yield self.controller.config.get_plugin_value(self, client.server, None, 'join')
+        if channels_rel is not None and channels_rel > 0:
+            channels = [c.strip() for c in (channels or '').split(',') if c.strip()]
+            if channel in channels:
+                channels.remove(channel)
+                self.controller.config.update_plugin_value(self, client.server, None, 'join', ','.join(channels))
+
+    def on_channel_kicked(self, client, channel, kicker, message):
+        reactor.callLater(3, client.join, channel)
