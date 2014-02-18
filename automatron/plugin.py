@@ -43,7 +43,8 @@ class PluginManager(object):
                 if event_interface.extends(IAutomatronEventHandler):
                     try:
                         zope.interface.verify.verifyClass(event_interface, plugin_class)
-                    except zope.interface.verify.BrokenMethodImplementation as e:
+                    except (zope.interface.verify.BrokenImplementation,
+                            zope.interface.verify.BrokenMethodImplementation) as e:
                         log.err(e, 'Plugin %s is broken' % plugin_class.__name__)
                         break
             else:
