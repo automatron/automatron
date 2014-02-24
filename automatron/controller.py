@@ -1,3 +1,4 @@
+from ConfigParser import SafeConfigParser
 from twisted.application import internet
 from twisted.application.service import MultiService
 from twisted.internet import defer
@@ -13,14 +14,17 @@ DEFAULT_PORT = 6667
 class Controller(MultiService):
     def __init__(self, config_file):
         MultiService.__init__(self)
-        self.config_file = config_file
+
+        self.config_file = SafeConfigParser()
+        self.config_file.readfp(open(config_file))
+
         self.plugins = None
         self.config = None
 
     @defer.inlineCallbacks
     def startService(self):
         # Set up configuration manager
-        self.config = ConfigManager(self.config_file)
+        self.config = ConfigManager(self)
 
         # Load plugins
         self.plugins = PluginManager(self)

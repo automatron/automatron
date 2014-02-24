@@ -1,16 +1,11 @@
-from ConfigParser import SafeConfigParser
 from twisted.enterprise import adbapi
 from twisted.internet import defer
 
 
 class ConfigManager(object):
-    def __init__(self, config_file):
-        # Load configuration file
-        config = SafeConfigParser()
-        config.readfp(open(config_file))
-
+    def __init__(self, controller):
         # Set up the database connection pool
-        db_section = dict(config.items('database'))
+        db_section = dict(controller.config_file.items('database'))
         dbapi_name = db_section.pop('dbapi')
         self.database = adbapi.ConnectionPool(dbapi_name, **db_section)
 
