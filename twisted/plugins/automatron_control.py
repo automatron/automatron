@@ -42,7 +42,12 @@ class AutomatronControlPlugin(object):
         getattr(self, '_on_command_%s' % command)(client, user, *args)
 
     def _on_command_join(self, client, user, channel, key=None):
-        client.join(channel, key)
+        if key is not None:
+            self.controller.config.update_value('channel', client.server, channel, 'key', key)
+            client.join(channel, key)
+        else:
+            d = self.controller.config.get_value('channel', client.server, channel, 'key')
+            d.addCallback(lambda channel_key, _: client.join(channel, channel_key))
 
     def _on_command_leave(self, client, user, channel, reason=None):
         client.leave(channel, reason if reason is not None else 'Leaving...')
