@@ -31,9 +31,10 @@ class AutomatronControlPlugin(object):
         nickname = client.parse_user(user)[0]
         config = self.command_map[command]
 
-        if not (yield self.controller.config.has_permission(client.server, None, user, config[3])):
-            client.msg(nickname, 'You\'re not authorized to do that.')
-            return
+        if config[3] is not None:
+            if not (yield self.controller.config.has_permission(client.server, None, user, config[3])):
+                client.msg(nickname, 'You\'re not authorized to do that.')
+                return
 
         if not config[1] <= len(args) <= config[2]:
             client.msg(nickname, 'Invalid syntax. Use: %s %s' % (command, config[0]))
