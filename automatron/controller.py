@@ -1,10 +1,11 @@
-from ConfigParser import SafeConfigParser
+from ConfigParser import SafeConfigParser, NoSectionError
 from twisted.application import internet
 from twisted.application.service import MultiService
 from twisted.internet import defer
+from twisted.plugin import getPlugins, IPlugin
 from twisted.python import log
 from automatron.client import ClientFactory
-from automatron.config import ConfigManager
+from automatron.config import IAutomatronConfigManagerFactory
 from automatron.plugin import PluginManager
 
 
@@ -24,7 +25,8 @@ class Controller(MultiService):
     @defer.inlineCallbacks
     def startService(self):
         # Set up configuration manager
-        self.config = ConfigManager(self)
+        self.config = self._build_config_manager()
+        yield self.config.prepare()
 
         # Load plugins
         self.plugins = PluginManager(self)
@@ -45,3 +47,17 @@ class Controller(MultiService):
             connector.setServiceParent(self)
 
         MultiService.startService(self)
+
+    def _build_config_manager(self):
+        try:
+            automatron_options = dict(self.config_file.items('automatron'))
+        except NoSectionError:
+            automatron_options = {}
+        typename = automatron_options.get('configmanager', 'sql')
+
+        factories = list(getPlugins(IAutomatronConfigManagerFactory))
+        for factory in factories:
+            if factory.name == typename:
+                return factory(self)
+        else:
+            raise RuntimeError('Config manager class %s not found' % typename)
