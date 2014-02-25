@@ -19,6 +19,7 @@ class AutomatronControlPlugin(object):
         'join': ('<channel> [key]', 1, 2, 'channel'),
         'leave': ('<channel> [reason]', 1, 2, 'channel'),
         'say': ('<channel> <message>', 2, 2, 'say'),
+        'identify': ('[channel]', 0, 1, None)
     }
 
     def on_command(self, client, user, command, args):
@@ -55,3 +56,26 @@ class AutomatronControlPlugin(object):
 
     def _on_command_say(self, client, user, channel, message):
         client.msg(channel, message)
+
+    @defer.inlineCallbacks
+    def _on_command_identify(self, client, user, channel=None):
+        nickname = client.parse_user(user)[0]
+        username, username_relevance = yield self.controller.config.get_username_by_hostmask(client.server, user)
+        if username is not None:
+            if username_relevance == 0:
+                identity = 'You are globally known as %s' % username
+            else:
+                identity = 'You are known as %s' % username
+
+            role, role_relevance = yield self.controller.config.get_role_by_username(client.server, channel, username)
+            if role_relevance is not None and role_relevance < username_relevance:
+                role = role_relevance = None
+
+            if role_relevance is None:
+                client.msg(nickname, identity)
+            elif role_relevance in (2, 3):
+                client.msg(nickname, '%s and your role in %s is %s' % (identity, channel, role))
+            else:
+                client.msg(nickname, '%s and your role is %s' % (identity, role))
+        else:
+            client.msg(nickname, 'I don\'t know you...')
