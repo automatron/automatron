@@ -336,7 +336,7 @@ class IAutomatronNoticeHandler(IAutomatronEventHandler):
 
 
 class IAutomatronActionHandler(IAutomatronEventHandler):
-    def on_action(client):
+    def on_action(client, user, channel, data):
         """
         Called when a user performs an action.
         """
