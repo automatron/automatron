@@ -49,7 +49,7 @@ class AutomatronControlPlugin(object):
             client.join(channel, key)
         else:
             d = self.controller.config.get_value('channel', client.server, channel, 'key')
-            d.addCallback(lambda channel_key, _: client.join(channel, channel_key))
+            d.addCallback(lambda (channel_key, _): client.join(channel, channel_key))
 
     def _on_command_leave(self, client, user, channel, reason='Leaving...'):
         client.leave(channel, reason)
