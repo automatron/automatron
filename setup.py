@@ -10,7 +10,6 @@ with open(os.path.join(here, 'CHANGES.txt')) as f:
 
 requires = [
     'Twisted',
-    'psycopg2',
 ]
 
 setup(
@@ -31,7 +30,4 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=requires,
-    data_files=[
-        ('share/doc/automatron/postgresql', ['doc/postgresql/config.sql']),
-    ],
 )

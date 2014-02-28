@@ -49,12 +49,7 @@ class Controller(MultiService):
         MultiService.startService(self)
 
     def _build_config_manager(self):
-        try:
-            automatron_options = dict(self.config_file.items('automatron'))
-        except NoSectionError:
-            automatron_options = {}
-        typename = automatron_options.get('configmanager', 'sql')
-
+        typename = self.config_file.get('automatron', 'configmanager')
         factories = list(getPlugins(IAutomatronConfigManagerFactory))
         for factory in factories:
             if factory.name == typename:
