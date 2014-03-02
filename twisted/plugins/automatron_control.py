@@ -29,16 +29,15 @@ class AutomatronControlPlugin(object):
 
     @defer.inlineCallbacks
     def _on_command(self, client, user, command, args):
-        nickname = client.parse_user(user)[0]
         config = self.command_map[command]
 
         if config[3] is not None:
             if not (yield self.controller.config.has_permission(client.server, None, user, config[3])):
-                client.msg(nickname, 'You\'re not authorized to do that.')
+                client.msg(user, 'You\'re not authorized to do that.')
                 return
 
         if not config[1] <= len(args) <= config[2]:
-            client.msg(nickname, 'Invalid syntax. Use: %s %s' % (command, config[0]))
+            client.msg(user, 'Invalid syntax. Use: %s %s' % (command, config[0]))
             return
 
         getattr(self, '_on_command_%s' % command)(client, user, *args)
@@ -59,7 +58,6 @@ class AutomatronControlPlugin(object):
 
     @defer.inlineCallbacks
     def _on_command_identify(self, client, user, channel=None):
-        nickname = client.parse_user(user)[0]
         username, username_relevance = yield self.controller.config.get_username_by_hostmask(client.server, user)
         if username is not None:
             if username_relevance == 0:
@@ -72,10 +70,10 @@ class AutomatronControlPlugin(object):
                 role = role_relevance = None
 
             if role_relevance is None:
-                client.msg(nickname, identity)
+                client.msg(user, identity)
             elif role_relevance in (2, 3):
-                client.msg(nickname, '%s and your role in %s is %s' % (identity, channel, role))
+                client.msg(user, '%s and your role in %s is %s' % (identity, channel, role))
             else:
-                client.msg(nickname, '%s and your role is %s' % (identity, role))
+                client.msg(user, '%s and your role is %s' % (identity, role))
         else:
-            client.msg(nickname, 'I don\'t know you...')
+            client.msg(user, 'I don\'t know you...')

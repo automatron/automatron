@@ -26,7 +26,7 @@ class CommandMessagePlugin(object):
         try:
             args = shlex.split(message)
         except ValueError as e:
-            client.msg(client.parse_user(user)[0], 'Invalid syntax: %s' % str(e))
+            client.msg(user, 'Invalid syntax: %s' % str(e))
             log.err(e, 'Unable to parse command')
             defer.returnValue(STOP)
 
