@@ -23,6 +23,18 @@ class Client(irc.IRCClient):
         self.nickname = self.nicknames[0]
         self.realname = self.config.get('realname', DEFAULT_REALNAME)
 
+    def msg(self, user, message, length=None):
+        m = USER_RE.match(user)
+        if m:
+           user = m.group(1)
+        return irc.IRCClient.msg(self, user, message, length)
+
+    def notice(self, user, message):
+        m = USER_RE.match(user)
+        if m:
+            user = m.group(1)
+        irc.IRCClient.notice(self, user, message)
+
     def logPrefix(self):
         return '%s' % self.server
 
