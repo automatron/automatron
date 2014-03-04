@@ -17,6 +17,11 @@ class IConfigManager(zope.interface.Interface):
         Establish the database connection.
         """
 
+    def shutdown():
+        """
+        Drop any connections. Provided to facilitate clean exits.
+        """
+
     def enumerate_servers():
         """
         Return a list of servers for which we have configuration.
