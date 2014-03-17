@@ -8,7 +8,7 @@ class AutomatronControlPlugin(object):
     classProvides(IAutomatronPluginFactory)
     implements(IAutomatronCommandHandler)
 
-    name = 'notify_control'
+    name = 'control'
     priority = 100
 
     def __init__(self, controller):
