@@ -19,7 +19,8 @@ class AutomatronControlPlugin(object):
         'join': ('<channel> [key]', 1, 2, 'channel'),
         'leave': ('<channel> [reason]', 1, 2, 'channel'),
         'say': ('<channel> <message>', 2, 2, 'say'),
-        'identify': ('[channel]', 0, 1, None)
+        'nickname': ('<nickname>', 1, 1, 'admin'),
+        'identify': ('[channel]', 0, 1, None),
     }
 
     def on_command(self, client, user, command, args):
@@ -55,6 +56,9 @@ class AutomatronControlPlugin(object):
 
     def _on_command_say(self, client, user, channel, message):
         client.msg(channel, message)
+
+    def _on_command_nickname(self, client, user, nickname):
+        client.setNick(nickname)
 
     @defer.inlineCallbacks
     def _on_command_identify(self, client, user, channel=None):

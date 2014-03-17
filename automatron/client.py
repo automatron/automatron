@@ -110,6 +110,7 @@ class Client(irc.IRCClient):
 
     def nickChanged(self, nick):
         log.msg('Nickname changed from %s to %s' % (self.nickname, nick))
+        self.nickname = nick
         self.emit(IAutomatronNicknameChangedHandler['on_nickname_changed'], nick)
 
     def modeChanged(self, user, channel, set, modes, args):
