@@ -10,6 +10,7 @@ with open(os.path.join(here, 'CHANGES.txt')) as f:
 
 requires = [
     'Twisted',
+    'passlib',
 ]
 
 setup(
@@ -30,4 +31,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=requires,
+    scripts=[
+        'scripts/automatron-user',
+    ]
 )

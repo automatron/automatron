@@ -1,0 +1,133 @@
+#! /usr/bin/env python
+
+from getpass import getpass
+import sys
+from twisted.internet import defer
+from twisted.internet.task import react
+from automatron.controller import Controller
+from passlib.apps import custom_app_context as pwd_context
+
+
+@defer.inlineCallbacks
+def list(config, server=None):
+    user_email = yield config.get_section('user.email', server, None)
+    for username in sorted(user_email):
+        print username
+
+
+@defer.inlineCallbacks
+def create(config, server, username, email=None, role=None, password=None):
+    if not server:
+        server = None
+
+    if not email:
+        email = ''
+
+    if password is None:
+        password = getpass('Password: ')
+
+    if not password:
+        print >>sys.stderr, 'Warning: Creating user without a password'
+
+    _, user_email_rel = yield config.get_value(
+        'user.email',
+        server,
+        None,
+        username
+    )
+    if user_email_rel is not None:
+        print >>sys.stderr, 'User %s already exists.' % username
+        return
+
+    _, verify_rel = yield config.get_value(
+        'user.verify',
+        server,
+        None,
+        username
+    )
+    if verify_rel is not None:
+        print >>sys.stderr, 'User %s is pending verification.' % username
+        return
+
+    yield config.update_value('user.email', server, None, username, email)
+    if password:
+        yield config.update_value('user.password', server, None, username, pwd_context.encrypt(password))
+
+    if role is None:
+        role, _ = yield config.get_value('plugin.control', server, None, 'default_role')
+    if role:
+        yield config.update_value(
+            'user.role',
+            server,
+            None,
+            username,
+            role
+        )
+        print 'Created user %s with role %s.' % (username, role)
+    else:
+        print 'Created user %s without a role.' % username
+
+
+@defer.inlineCallbacks
+def delete(config, server, username):
+    if not server:
+        server = None
+
+    _, user_email_rel = yield config.get_value('user.email', server, None, username)
+    if user_email_rel is None:
+        print >>sys.stderr, 'User %s not found.' % username
+        return
+
+    if server and not user_email_rel:
+        print >>sys.stderr, 'User %s found globally, aborting.' % username
+        return
+
+    yield config.delete_value('user.email', server, None, username)
+    yield config.delete_value('user.role', server, None, username)
+    yield config.delete_value('user.password', server, None, username)
+    host_masks = yield config.get_section('user.hostmask', server, None)
+    for key, value in host_masks.items():
+        if value == username:
+            yield config.delete_value('user.hostmask', server, None, key)
+    yield config.delete_section('user.pref', server, username)
+
+
+@defer.inlineCallbacks
+def run_with_config(reactor, f, config_file, *args):
+    controller = Controller(config_file)
+    config = controller._build_config_manager()
+    yield config.prepare()
+    yield f(config, *args)
+    yield config.shutdown()
+
+
+def help():
+    print >>sys.stderr, 'To list existing users:'
+    print >>sys.stderr, '%s <config file> list [server]' % sys.argv[0]
+    print >>sys.stderr
+    print >>sys.stderr, 'To create a new user:'
+    print >>sys.stderr, '%s <config file> create <server> <username> [email] [role] [password]' % sys.argv[0]
+    print >>sys.stderr, 'To create a global user, set server to an empty string ("").'
+    print >>sys.stderr
+    print >>sys.stderr, 'To delete a user:'
+    print >>sys.stderr, '%s create <config file> <server> <username>' % sys.argv[0]
+    print >>sys.stderr, 'To delete a global user, set server to an empty string ("").'
+    print >>sys.stderr
+
+
+def main():
+    commands = {
+        'list': (list, 0, 1),
+        'create': (create, 2, 5),
+        'delete': (delete, 2, 2),
+    }
+
+    for cmd, config in commands.items():
+        if len(sys.argv) in range(config[1] + 3, config[2] + 4) and sys.argv[1] == cmd:
+            react(run_with_config, [config[0]] + sys.argv[2:])
+            break
+    else:
+        help()
+
+if __name__ == '__main__':
+    main()
