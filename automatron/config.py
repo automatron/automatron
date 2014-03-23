@@ -38,6 +38,11 @@ class IConfigManager(zope.interface.Interface):
         Convenience method to obtain a configuration section for a plugin.
         """
 
+    def delete_section(section, server, channel):
+        """
+        Delete the configuration section for a specific channel on a sever.
+        """
+
     def get_value(section, server, channel, key):
         """
         Return a configuration value and its relevance. If relevance is 0
@@ -60,6 +65,11 @@ class IConfigManager(zope.interface.Interface):
     def update_plugin_value(plugin, server, channel, key, new_value):
         """
         Convenience method to update or set a configuration value for a plugin.
+        """
+
+    def delete_value(section, server, channel, key):
+        """
+        Delete a configuration key for a specific channel on a sever.
         """
 
     def get_username_by_hostmask(server, user):
