@@ -6,9 +6,6 @@ from automatron.core.event import EventManager
 
 
 class IAutomatronPluginFactory(IPlugin):
-    name = zope.interface.Attribute("""The name of this plugin.""")
-    priority = zope.interface.Attribute("""The priority with which the plugin will be executed.""")
-
     def __call__(controller):
         """
         Create a new controller.

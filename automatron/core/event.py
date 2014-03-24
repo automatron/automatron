@@ -11,6 +11,8 @@ class IAutomatronEventHandler(zope.interface.Interface):
     """
     Abstract interface which is the base of all event handler interfaces.
     """
+    name = zope.interface.Attribute("""The name of this event handler.""")
+    priority = zope.interface.Attribute("""The priority with which the event handler will be executed.""")
 
 
 class EventManager(object):
@@ -33,7 +35,7 @@ class EventManager(object):
                     zope.interface.verify.verifyObject(event_interface, handler)
                 except (zope.interface.verify.BrokenImplementation,
                         zope.interface.verify.BrokenMethodImplementation) as e:
-                    log.err(e, 'Event handler %s is broken' % handler.__name__)
+                    log.err(e, 'Event handler %s is broken' % handler.name)
                     break
         else:
             self.event_handlers.append(handler)
