@@ -182,18 +182,22 @@ class ClientFactory(protocol.ReconnectingClientFactory):
         self.controller = controller
         self.server = server
         self.config = config
+        self.client = None
 
     def buildProtocol(self, addr):
         log.msg('Setting up connection to %s' % addr)
         self.resetDelay()
-        return Client(self.controller, self.server, self.config)
+        self.client = Client(self.controller, self.server, self.config)
+        return self.client
 
     def clientConnectionLost(self, connector, reason):
         log.msg('Connection lost (%s)' % reason)
+        self.client = None
         protocol.ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
 
     def clientConnectionFailed(self, connector, reason):
         log.msg('Connection failed (%s)' % reason)
+        self.client = None
         protocol.ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
 
 
