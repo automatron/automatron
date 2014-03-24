@@ -23,6 +23,7 @@ class Controller(MultiService):
 
         self.plugins = None
         self.config = None
+        self.factories = {}
 
     @defer.inlineCallbacks
     def startService(self):
@@ -42,6 +43,7 @@ class Controller(MultiService):
         for server in servers:
             server_config = yield self.config.get_section('server', server, None)
             factory = ClientFactory(self, server, server_config)
+            self.factories[server] = factory
 
             server_hostname = server_config['hostname']
             server_port = server_config.get('port', DEFAULT_PORT)
