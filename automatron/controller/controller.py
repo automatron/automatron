@@ -5,16 +5,49 @@ from twisted.application.service import MultiService
 from twisted.internet import defer
 from twisted.plugin import getPlugins
 from twisted.python import log
+from zope.interface import implements
 
 from automatron.controller.client import ClientFactory
 from automatron.controller.config import IAutomatronConfigManagerFactory
 from automatron.controller.plugin import PluginManager
+from automatron.core.event import IAutomatronEventHandler
 
 
 DEFAULT_PORT = 6667
 
 
+class IAutomatronClientActions(IAutomatronEventHandler):
+    def message(server, user, message):
+        """
+        Send a message to user on a server we're connected to.
+        """
+
+    def action(server, user, message):
+        """
+        Perform an action (/me ..).
+        """
+
+    def join(server, channel, key=None):
+        """
+        Join a channel on a server.
+        """
+
+    def leave(server, channel, reason=None):
+        """
+        Leave a channel on a server.
+        """
+
+    def nick(server, nickname):
+        """
+        Change nickname.
+        """
+
+
 class Controller(MultiService):
+    implements(IAutomatronClientActions)
+    priority = 100
+    name = 'controller'
+
     def __init__(self, config_file):
         MultiService.__init__(self)
 
@@ -33,6 +66,7 @@ class Controller(MultiService):
 
         # Load plugins
         self.plugins = PluginManager(self)
+        self.plugins.register_event_handler(self)
 
         servers = yield self.config.enumerate_servers()
 
@@ -60,3 +94,50 @@ class Controller(MultiService):
                 return factory(self)
         else:
             raise RuntimeError('Config manager class %s not found' % typename)
+
+    def _get_client(self, server):
+        factory = self.factories.get(server)
+        if factory is None:
+            log.msg('Received message request for unknown server \'%s\'.' % server)
+            return None
+
+        if not factory.client:
+            log.msg('Received message request for currently disconnected server \'%s\'.' % server)
+            return None
+
+        return factory.client
+
+    def message(self, server, user, message):
+        client = self._get_client(server)
+        if client is None:
+            return
+
+        return client.msg(user, message)
+
+    def join(self, server, channel, key=None):
+        client = self._get_client(server)
+        if client is None:
+            return
+
+        return client.join(channel, key)
+
+    def leave(self, server, channel, reason=None):
+        client = self._get_client(server)
+        if client is None:
+            return
+
+        return client.leave(channel, reason)
+
+    def nick(self, server, nickname):
+        client = self._get_client(server)
+        if client is None:
+            return
+
+        return client.setNick(nickname)
+
+    def action(self, server, channel, action):
+        client = self._get_client(server)
+        if client is None:
+            return
+
+        return client.describe(channel, action)
