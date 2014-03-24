@@ -1,17 +1,14 @@
 import random
-import re
-
 from twisted.internet import protocol
 from twisted.words.protocols import irc
 from twisted.python import log
-
 from automatron.core.event import IAutomatronEventHandler
+from automatron.core.util import parse_user
 
 
 i = random.randrange(10000)
 DEFAULT_NICKNAME = 'automatron%d,automatron%d_,automatron%d__' % (i, i, i)
 DEFAULT_REALNAME = 'Automatron IRC bot'
-USER_RE = re.compile(r'(.*?)!(.*?)@(.*)')
 
 
 class Client(irc.IRCClient):
@@ -27,15 +24,11 @@ class Client(irc.IRCClient):
         self.realname = self.config.get('realname', DEFAULT_REALNAME)
 
     def msg(self, user, message, length=None):
-        m = USER_RE.match(user)
-        if m:
-           user = m.group(1)
+        user = parse_user(user)[0]
         return irc.IRCClient.msg(self, user, message, length)
 
     def notice(self, user, message):
-        m = USER_RE.match(user)
-        if m:
-            user = m.group(1)
+        user = parse_user(user)[0]
         irc.IRCClient.notice(self, user, message)
 
     def logPrefix(self):
@@ -43,13 +36,6 @@ class Client(irc.IRCClient):
 
     def emit(self, event, *args):
         self.controller.plugins.emit(event, self, *args)
-
-    def parse_user(self, user):
-        m = USER_RE.match(user)
-        if not m:
-            return user, None, None
-        else:
-            return m.groups()
 
     def alterCollidedNick(self, nickname):
         new_nick = self.nicknames[(self.nicknames.index(nickname) + 1) % len(self.nicknames)]
@@ -141,40 +127,40 @@ class Client(irc.IRCClient):
     def topicUpdated(self, user, channel, newTopic):
         log.msg('[%s] *** topic changed by %s: %s' % (
             channel,
-            self.parse_user(user)[0],
+            parse_user(user)[0],
             newTopic
         ))
         self.emit(IAutomatronChannelTopicChangedHandler['on_channel_topic_changed'], user, channel, newTopic)
 
     def privmsg(self, user, channel, message):
-        log.msg('[%s] %s: %s' % (channel, self.parse_user(user)[0], message))
+        log.msg('[%s] %s: %s' % (channel, parse_user(user)[0], message))
         self.emit(IAutomatronMessageHandler['on_message'], user, channel, message)
 
     def noticed(self, user, channel, message):
-        log.msg('|%s| %s: %s' % (channel, self.parse_user(user)[0], message))
+        log.msg('|%s| %s: %s' % (channel, parse_user(user)[0], message))
         self.emit(IAutomatronNoticeHandler['on_notice'], user, channel, message)
 
     def action(self, user, channel, data):
-        log.msg('[%s] *%s %s' % (channel, self.parse_user(user)[0], data))
+        log.msg('[%s] *%s %s' % (channel, parse_user(user)[0], data))
         self.emit(IAutomatronActionHandler['on_action'], user, channel, data)
 
     def userJoined(self, user, channel):
-        log.msg('[%s] *** user %s joined' % (channel, self.parse_user(user)[0]))
+        log.msg('[%s] *** user %s joined' % (channel, parse_user(user)[0]))
         self.emit(IAutomatronUserJoinedHandler['on_user_joined'], user, channel)
 
     def userLeft(self, user, channel):
-        log.msg('[%s] *** user %s left' % (channel, self.parse_user(user)))
+        log.msg('[%s] *** user %s left' % (channel, parse_user(user)[0]))
         self.emit(IAutomatronUserLeftHandler['on_user_left'], user, channel)
 
     def userQuit(self, user, quitMessage):
-        log.msg('*** user %s quit (reason: %s)' % (self.parse_user(user), quitMessage))
+        log.msg('*** user %s quit (reason: %s)' % (parse_user(user), quitMessage))
         self.emit(IAutomatronUserQuitHandler['on_user_quit'], user, quitMessage)
 
     def userKicked(self, kickee, channel, kicker, message):
         log.msg('[%s] user %s was kicked by %s (reason: %s)' % (
             channel,
-            self.parse_user(kickee)[0],
-            self.parse_user(kicker)[0],
+            parse_user(kickee)[0],
+            parse_user(kicker)[0],
             message
         ))
         self.emit(IAutomatronUserKickedHandler['on_user_kicked'], kickee, channel, kicker, message)
