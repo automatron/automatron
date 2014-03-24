@@ -1,7 +1,7 @@
 .idea/
 *.egg-info/
 *.pyc
-twistd.log
-twistd.pid
+*.log
+*.pid
 dropin.cache
 automatron.ini

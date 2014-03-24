@@ -40,7 +40,7 @@ class Client(irc.IRCClient):
             'nickname': self.nickname,
             'realname': self.realname,
         }
-        self.controller.plugins.emit(event, server, *args)
+        self.controller.router.publish(event, server, *args)
 
     def alterCollidedNick(self, nickname):
         new_nick = self.nicknames[(self.nicknames.index(nickname) + 1) % len(self.nicknames)]

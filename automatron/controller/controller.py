@@ -1,17 +1,11 @@
-from ConfigParser import SafeConfigParser
-
 from twisted.application import internet
-from twisted.application.service import MultiService
 from twisted.internet import defer
-from twisted.plugin import getPlugins
 from twisted.python import log
 from zope.interface import implements
-
 from automatron.controller.client import ClientFactory
-from automatron.controller.config import IAutomatronConfigManagerFactory
-from automatron.controller.plugin import PluginManager
 from automatron.controller.router import Router
-from automatron.core.event import IAutomatronEventHandler
+from automatron.core.controller import BaseController
+from automatron.core.event import IAutomatronEventHandler, EventManager
 
 
 DEFAULT_PORT = 6667
@@ -44,34 +38,25 @@ class IAutomatronClientActions(IAutomatronEventHandler):
         """
 
 
-class Controller(MultiService):
+class Controller(BaseController):
     implements(IAutomatronClientActions)
     priority = 100
     name = 'controller'
 
     def __init__(self, config_file):
-        MultiService.__init__(self)
-
-        self.config_file = SafeConfigParser()
-        self.config_file.readfp(open(config_file))
-
+        BaseController.__init__(self, config_file)
         self.router = None
-        self.plugins = None
-        self.config = None
+        self.events = None
         self.factories = {}
 
     @defer.inlineCallbacks
-    def startService(self):
-        # Set up configuration manager
-        self.config = self._build_config_manager()
-        yield self.config.prepare()
-
+    def prepareService(self):
         # Configure ZeroMQ router
         self.router = Router(self)
 
-        # Load plugins
-        self.plugins = PluginManager(self)
-        self.plugins.register_event_handler(self)
+        # Configure event manager
+        self.events = EventManager(self)
+        self.events.register_event_handler(self)
 
         servers = yield self.config.enumerate_servers()
 
@@ -88,17 +73,6 @@ class Controller(MultiService):
             server_port = server_config.get('port', DEFAULT_PORT)
             connector = internet.TCPClient(server_hostname, server_port, factory)
             connector.setServiceParent(self)
-
-        MultiService.startService(self)
-
-    def _build_config_manager(self):
-        typename = self.config_file.get('automatron', 'configmanager')
-        factories = list(getPlugins(IAutomatronConfigManagerFactory))
-        for factory in factories:
-            if factory.name == typename:
-                return factory(self)
-        else:
-            raise RuntimeError('Config manager class %s not found' % typename)
 
     def _get_client(self, server):
         factory = self.factories.get(server)
