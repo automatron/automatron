@@ -25,20 +25,20 @@ class AutomatronControlPlugin(object):
         'nickname': ('<nickname>', 1, 1, 'admin'),
     }
 
-    def on_command(self, client, user, command, args):
+    def on_command(self, server, user, command, args):
         if command in self.command_map:
-            self._on_command(client, user, command, args)
+            self._on_command(server, user, command, args)
             return STOP
 
     @defer.inlineCallbacks
-    def _on_command(self, client, user, command, args):
+    def _on_command(self, server, user, command, args):
         config = self.command_map[command]
 
         if config[3] is not None:
-            if not (yield self.controller.config.has_permission(client.server, None, user, config[3])):
+            if not (yield self.controller.config.has_permission(server['server'], None, user, config[3])):
                 self.controller.plugins.emit(
                     IAutomatronClientActions['message'],
-                    client.server,
+                    server['server'],
                     user,
                     'You\'re not authorized to do that.'
                 )
@@ -47,47 +47,47 @@ class AutomatronControlPlugin(object):
         if not config[1] <= len(args) <= config[2]:
             self.controller.plugins.emit(
                 IAutomatronClientActions['message'],
-                client.server,
+                server['server'],
                 user,
                 'Invalid syntax. Use: %s %s' % (command, config[0])
             )
             return
 
-        getattr(self, '_on_command_%s' % command)(client, user, *args)
+        getattr(self, '_on_command_%s' % command)(server, user, *args)
 
     @defer.inlineCallbacks
-    def _on_command_join(self, client, user, channel, key=None):
+    def _on_command_join(self, server, user, channel, key=None):
         if key is not None:
-            self.controller.config.update_value('channel', client.server, channel, 'key', key)
+            self.controller.config.update_value('channel', server['server'], channel, 'key', key)
         else:
-            key = yield self.controller.config.get_value('channel', client.server, channel, 'key')
+            key = yield self.controller.config.get_value('channel', server['server'], channel, 'key')
 
         self.controller.plugins.emit(
             IAutomatronClientActions['join'],
-            client.server,
+            server['server'],
             channel,
             key
         )
 
-    def _on_command_leave(self, client, user, channel, reason='Leaving...'):
+    def _on_command_leave(self, server, user, channel, reason='Leaving...'):
         self.controller.plugins.emit(
             IAutomatronClientActions['leave'],
-            client.server,
+            server['server'],
             channel,
             reason
         )
 
-    def _on_command_say(self, client, user, channel, message):
+    def _on_command_say(self, server, user, channel, message):
         self.controller.plugins.emit(
             IAutomatronClientActions['message'],
-            client.server,
+            server['server'],
             channel,
             message
         )
 
-    def _on_command_nickname(self, client, user, nickname):
+    def _on_command_nickname(self, server, user, nickname):
         self.controller.plugins.emit(
             IAutomatronClientActions['nick'],
-            client.server,
+            server['server'],
             nickname
         )

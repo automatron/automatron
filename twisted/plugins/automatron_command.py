@@ -21,18 +21,18 @@ class CommandMessagePlugin(object):
     def __init__(self, controller):
         self.controller = controller
 
-    def on_message(self, client, user, channel, message):
-        if channel == client.nickname and message:
-            return self._on_message(client, user, message)
+    def on_message(self, server, user, channel, message):
+        if channel == server['nickname'] and message:
+            return self._on_message(server, user, message)
 
     @defer.inlineCallbacks
-    def _on_message(self, client, user, message):
+    def _on_message(self, server, user, message):
         try:
             args = shlex.split(message)
         except ValueError as e:
             self.controller.plugins.emit(
                 IAutomatronClientActions['message'],
-                client.server,
+                server['server'],
                 user,
                 'Invalid syntax: %s' % str(e)
             )
@@ -45,7 +45,7 @@ class CommandMessagePlugin(object):
 
         defer.returnValue((yield self.controller.plugins.emit(
             IAutomatronCommandHandler['on_command'],
-            client,
+            server,
             user,
             command,
             args

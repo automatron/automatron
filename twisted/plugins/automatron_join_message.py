@@ -16,13 +16,13 @@ class JoinMessagePlugin(object):
     def __init__(self, controller):
         self.controller = controller
 
-    def on_channel_joined(self, client, channel):
-        return self._on_channel_joined(client, channel)
+    def on_channel_joined(self, server, channel):
+        return self._on_channel_joined(server, channel)
 
     @defer.inlineCallbacks
-    def _on_channel_joined(self, client, channel):
-        message, message_rel = yield self.controller.config.get_plugin_value(self, client.server, channel, 'message')
-        action, action_rel = yield self.controller.config.get_plugin_value(self, client.server, channel, 'action')
+    def _on_channel_joined(self, server, channel):
+        message, message_rel = yield self.controller.config.get_plugin_value(self, server['server'], channel, 'message')
+        action, action_rel = yield self.controller.config.get_plugin_value(self, server['server'], channel, 'action')
 
         if message is not None and (action is None or message_rel > action_rel):
             f = IAutomatronClientActions['message']
@@ -32,7 +32,4 @@ class JoinMessagePlugin(object):
         else:
             return
 
-        self.controller.plugins.emit(f, client.server, channel, message % {
-            'nickname': client.nickname,
-            'realname': client.realname,
-        })
+        self.controller.plugins.emit(f, server['server'], channel, message % server)

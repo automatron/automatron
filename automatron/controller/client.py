@@ -35,7 +35,12 @@ class Client(irc.IRCClient):
         return '%s' % self.server
 
     def emit(self, event, *args):
-        self.controller.plugins.emit(event, self, *args)
+        server = {
+            'server': self.server,
+            'nickname': self.nickname,
+            'realname': self.realname,
+        }
+        self.controller.plugins.emit(event, server, *args)
 
     def alterCollidedNick(self, nickname):
         new_nick = self.nicknames[(self.nicknames.index(nickname) + 1) % len(self.nicknames)]
@@ -202,189 +207,189 @@ class ClientFactory(protocol.ReconnectingClientFactory):
 
 
 class IAutomatronConnectionMadeHandler(IAutomatronEventHandler):
-    def on_connection_made(client):
+    def on_connection_made(server):
         """
         Called when a connection to the server is made.
         """
 
 
 class IAutomatronConnectionLostHandler(IAutomatronEventHandler):
-    def on_connection_lost(client, reason):
+    def on_connection_lost(server, reason):
         """
         Called when the connection to the server is lost.
         """
 
 
 class IAutomatronServerMotdHandler(IAutomatronEventHandler):
-    def on_server_motd(client, motd):
+    def on_server_motd(server, motd):
         """
         Called when the message of the day is received from the server
         """
 
 
 class IAutomatronServerCreatedHandler(IAutomatronEventHandler):
-    def on_server_created(client, when):
+    def on_server_created(server, when):
         """
         Called when the server tells us when it was first created.
         """
 
 
 class IAutomatronServerHostHandler(IAutomatronEventHandler):
-    def on_server_host(client, info):
+    def on_server_host(server, info):
         """
         Called when the server tells us what its hostname is.
         """
 
 
 class IAutomatronServerInfoHandler(IAutomatronEventHandler):
-    def on_server_info(client, servername, version, umodes, cmodes):
+    def on_server_info(server, servername, version, umodes, cmodes):
         """
         Called when the server tells us its basic information
         """
 
 
 class IAutomatronServerSupportHandler(IAutomatronEventHandler):
-    def on_server_support(client, info):
+    def on_server_support(server, info):
         """
         Called when the server describes its capabilities.
         """
 
 
 class IAutomatronLuserClientHandler(IAutomatronEventHandler):
-    def on_luser_client(client, info):
+    def on_luser_client(server, info):
         """
         Called when the server tells us how many clients are connected.
         """
 
 
 class IAutomatronLuserChannelsHandler(IAutomatronEventHandler):
-    def on_luser_channels(client, channels):
+    def on_luser_channels(server, channels):
         """
         Called when the server tells us how many channels it serves.
         """
 
 
 class IAutomatronLuserOpHandler(IAutomatronEventHandler):
-    def on_luser_op(client, ops):
+    def on_luser_op(server, ops):
         """
         Called when the server tells us how many operators there are.
         """
 
 
 class IAutomatronLuserMeHandler(IAutomatronEventHandler):
-    def on_luser_me(client, info):
+    def on_luser_me(server, info):
         """
         Called when the server tells us about this particular node on the network.
         """
 
 
 class IAutomatronSignedOnHandler(IAutomatronEventHandler):
-    def on_signed_on(client):
+    def on_signed_on(server):
         """
         Called when the session with the IRC server is established.
         """
 
 
 class IAutomatronNicknameChangedHandler(IAutomatronEventHandler):
-    def on_nickname_changed(client, nick):
+    def on_nickname_changed(server, nick):
         """
         Called when our nickname has changed.
         """
 
 
 class IAutomatronModeChangedHandler(IAutomatronEventHandler):
-    def on_mode_changed(client, user, channel, set, modes, args):
+    def on_mode_changed(server, user, channel, set, modes, args):
         """
         Called when we're notified of one or more mode changes on a channel or user.
         """
 
 
 class IAutomatronChannelJoinedHandler(IAutomatronEventHandler):
-    def on_channel_joined(client, channel):
+    def on_channel_joined(server, channel):
         """
         Called when we've joined a channel.
         """
 
 
 class IAutomatronChannelLeftHandler(IAutomatronEventHandler):
-    def on_channel_left(client, channel):
+    def on_channel_left(server, channel):
         """
         Called when we've left a channel.
         """
 
 
 class IAutomatronChannelKickedHandler(IAutomatronEventHandler):
-    def on_channel_kicked(client, channel, kicker, message):
+    def on_channel_kicked(server, channel, kicker, message):
         """
         Called when we've been kicked from a channel.
         """
 
 
 class IAutomatronChannelTopicChangedHandler(IAutomatronEventHandler):
-    def on_channel_topic_changed(client, user, channel, new_topic):
+    def on_channel_topic_changed(server, user, channel, new_topic):
         """
         Called when the topic of a room we're in changes.
         """
 
 
 class IAutomatronMessageHandler(IAutomatronEventHandler):
-    def on_message(client, user, channel, message):
+    def on_message(server, user, channel, message):
         """
         Called when we receive a message.
         """
 
 
 class IAutomatronNoticeHandler(IAutomatronEventHandler):
-    def on_notice(client, user, channel, message):
+    def on_notice(server, user, channel, message):
         """
         Called when we receive a notice.
         """
 
 
 class IAutomatronActionHandler(IAutomatronEventHandler):
-    def on_action(client, user, channel, data):
+    def on_action(server, user, channel, data):
         """
         Called when a user performs an action.
         """
 
 
 class IAutomatronUserJoinedHandler(IAutomatronEventHandler):
-    def on_user_joined(client, user, channel):
+    def on_user_joined(server, user, channel):
         """
         Called when a user joins a channel we're in.
         """
 
 
 class IAutomatronUserLeftHandler(IAutomatronEventHandler):
-    def on_user_left(client, user, channel):
+    def on_user_left(server, user, channel):
         """
         Called when a user leaves a channel we're in.
         """
 
 
 class IAutomatronUserQuitHandler(IAutomatronEventHandler):
-    def on_user_quit(client, user, message):
+    def on_user_quit(server, user, message):
         """
         Called when a user we share a room with quits.
         """
 
 
 class IAutomatronUserKickedHandler(IAutomatronEventHandler):
-    def on_user_kicked(client, kickee, channel, kicker, message):
+    def on_user_kicked(server, kickee, channel, kicker, message):
         """
         Called when a user is kicked from a room we're in.
         """
 
 
 class IAutomatronUserNicknameChangedHandler(IAutomatronEventHandler):
-    def on_user_nickname_changed(client, old_name, new_name):
+    def on_user_nickname_changed(server, old_name, new_name):
         """
         Called when the nickname of a user changed.
         """
 
 
 class IAutomatronPongHandler(IAutomatronEventHandler):
-    def on_pong(client, user, secs):
+    def on_pong(server, user, secs):
         """
         Called when we received a CTCP PONG reply.
         """
