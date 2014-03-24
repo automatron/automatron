@@ -5,7 +5,7 @@ from twisted.internet import protocol
 from twisted.words.protocols import irc
 from twisted.python import log
 
-from automatron.controller.plugin import IAutomatronEventHandler
+from automatron.core.event import IAutomatronEventHandler
 
 
 i = random.randrange(10000)

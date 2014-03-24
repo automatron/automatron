@@ -5,8 +5,9 @@ from twisted.python import log
 from zope.interface import implements, classProvides
 
 from automatron.controller.command import IAutomatronCommandHandler
-from automatron.controller.plugin import IAutomatronPluginFactory, STOP
+from automatron.controller.plugin import IAutomatronPluginFactory
 from automatron.controller.client import IAutomatronMessageHandler
+from automatron.core.event import STOP
 
 
 class CommandMessagePlugin(object):
