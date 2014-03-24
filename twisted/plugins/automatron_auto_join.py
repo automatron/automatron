@@ -1,8 +1,8 @@
 from twisted.internet import defer, reactor
-from twisted.python import log
 from zope.interface import implements, classProvides
-from automatron.plugin import IAutomatronPluginFactory
-from automatron.client import IAutomatronSignedOnHandler, IAutomatronChannelJoinedHandler,\
+
+from automatron.controller.plugin import IAutomatronPluginFactory
+from automatron.controller.client import IAutomatronSignedOnHandler, IAutomatronChannelJoinedHandler,\
     IAutomatronChannelLeftHandler, IAutomatronChannelKickedHandler
 
 

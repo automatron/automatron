@@ -1,7 +1,8 @@
 from twisted.internet import defer
 from zope.interface import implements, classProvides
-from automatron.plugin import IAutomatronPluginFactory
-from automatron.client import IAutomatronChannelJoinedHandler
+
+from automatron.controller.plugin import IAutomatronPluginFactory
+from automatron.controller.client import IAutomatronChannelJoinedHandler
 
 
 class JoinMessagePlugin(object):

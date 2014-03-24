@@ -1,7 +1,8 @@
 from twisted.internet import defer
 from zope.interface import classProvides, implements
-from automatron.command import IAutomatronCommandHandler
-from automatron.plugin import IAutomatronPluginFactory, STOP
+
+from automatron.controller.command import IAutomatronCommandHandler
+from automatron.controller.plugin import IAutomatronPluginFactory, STOP
 
 
 class AutomatronControlPlugin(object):

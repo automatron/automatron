@@ -1,5 +1,5 @@
 from twisted.python import usage
-from automatron.controller import Controller
+from automatron.controller.controller import Controller
 
 
 class Options(usage.Options):

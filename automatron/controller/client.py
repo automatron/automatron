@@ -1,9 +1,12 @@
 import random
 import re
+
 from twisted.internet import protocol
 from twisted.words.protocols import irc
 from twisted.python import log
-from automatron.plugin import IAutomatronEventHandler
+
+from automatron.controller.plugin import IAutomatronEventHandler
+
 
 i = random.randrange(10000)
 DEFAULT_NICKNAME = 'automatron%d,automatron%d_,automatron%d__' % (i, i, i)

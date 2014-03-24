@@ -1,12 +1,14 @@
-from ConfigParser import SafeConfigParser, NoSectionError
+from ConfigParser import SafeConfigParser
+
 from twisted.application import internet
 from twisted.application.service import MultiService
 from twisted.internet import defer
-from twisted.plugin import getPlugins, IPlugin
+from twisted.plugin import getPlugins
 from twisted.python import log
-from automatron.client import ClientFactory
-from automatron.config import IAutomatronConfigManagerFactory
-from automatron.plugin import PluginManager
+
+from automatron.controller.client import ClientFactory
+from automatron.controller.config import IAutomatronConfigManagerFactory
+from automatron.controller.plugin import PluginManager
 
 
 DEFAULT_PORT = 6667

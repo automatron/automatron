@@ -1,10 +1,12 @@
 import shlex
+
 from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implements, classProvides
-from automatron.command import IAutomatronCommandHandler
-from automatron.plugin import IAutomatronPluginFactory, STOP
-from automatron.client import IAutomatronMessageHandler
+
+from automatron.controller.command import IAutomatronCommandHandler
+from automatron.controller.plugin import IAutomatronPluginFactory, STOP
+from automatron.controller.client import IAutomatronMessageHandler
 
 
 class CommandMessagePlugin(object):
