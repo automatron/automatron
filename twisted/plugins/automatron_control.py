@@ -2,6 +2,7 @@ from twisted.internet import defer
 from zope.interface import classProvides, implements
 
 from automatron.controller.command import IAutomatronCommandHandler
+from automatron.controller.controller import IAutomatronClientActions
 from automatron.controller.plugin import IAutomatronPluginFactory
 from automatron.core.event import STOP
 
@@ -35,28 +36,58 @@ class AutomatronControlPlugin(object):
 
         if config[3] is not None:
             if not (yield self.controller.config.has_permission(client.server, None, user, config[3])):
-                client.msg(user, 'You\'re not authorized to do that.')
+                self.controller.plugins.emit(
+                    IAutomatronClientActions['message'],
+                    client.server,
+                    user,
+                    'You\'re not authorized to do that.'
+                )
                 return
 
         if not config[1] <= len(args) <= config[2]:
-            client.msg(user, 'Invalid syntax. Use: %s %s' % (command, config[0]))
+            self.controller.plugins.emit(
+                IAutomatronClientActions['message'],
+                client.server,
+                user,
+                'Invalid syntax. Use: %s %s' % (command, config[0])
+            )
             return
 
         getattr(self, '_on_command_%s' % command)(client, user, *args)
 
+    @defer.inlineCallbacks
     def _on_command_join(self, client, user, channel, key=None):
         if key is not None:
             self.controller.config.update_value('channel', client.server, channel, 'key', key)
-            client.join(channel, key)
         else:
-            d = self.controller.config.get_value('channel', client.server, channel, 'key')
-            d.addCallback(lambda (channel_key, _): client.join(channel, channel_key))
+            key = yield self.controller.config.get_value('channel', client.server, channel, 'key')
+
+        self.controller.plugins.emit(
+            IAutomatronClientActions['join'],
+            client.server,
+            channel,
+            key
+        )
 
     def _on_command_leave(self, client, user, channel, reason='Leaving...'):
-        client.leave(channel, reason)
+        self.controller.plugins.emit(
+            IAutomatronClientActions['leave'],
+            client.server,
+            channel,
+            reason
+        )
 
     def _on_command_say(self, client, user, channel, message):
-        client.msg(channel, message)
+        self.controller.plugins.emit(
+            IAutomatronClientActions['message'],
+            client.server,
+            channel,
+            message
+        )
 
     def _on_command_nickname(self, client, user, nickname):
-        client.setNick(nickname)
+        self.controller.plugins.emit(
+            IAutomatronClientActions['nick'],
+            client.server,
+            nickname
+        )
