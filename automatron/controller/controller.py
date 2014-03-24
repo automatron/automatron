@@ -17,27 +17,27 @@ DEFAULT_PORT = 6667
 
 
 class IAutomatronClientActions(IAutomatronEventHandler):
-    def message(server, user, message):
+    def message(server_name, user, message):
         """
         Send a message to user on a server we're connected to.
         """
 
-    def action(server, user, message):
+    def action(server_name, user, message):
         """
         Perform an action (/me ..).
         """
 
-    def join(server, channel, key=None):
+    def join(server_name, channel, key=None):
         """
         Join a channel on a server.
         """
 
-    def leave(server, channel, reason=None):
+    def leave(server_name, channel, reason=None):
         """
         Leave a channel on a server.
         """
 
-    def nick(server, nickname):
+    def nick(server_name, nickname):
         """
         Change nickname.
         """
@@ -107,36 +107,36 @@ class Controller(MultiService):
 
         return factory.client
 
-    def message(self, server, user, message):
-        client = self._get_client(server)
+    def message(self, server_name, user, message):
+        client = self._get_client(server_name)
         if client is None:
             return
 
         return client.msg(user, message)
 
-    def join(self, server, channel, key=None):
-        client = self._get_client(server)
+    def join(self, server_name, channel, key=None):
+        client = self._get_client(server_name)
         if client is None:
             return
 
         return client.join(channel, key)
 
-    def leave(self, server, channel, reason=None):
-        client = self._get_client(server)
+    def leave(self, server_name, channel, reason=None):
+        client = self._get_client(server_name)
         if client is None:
             return
 
         return client.leave(channel, reason)
 
-    def nick(self, server, nickname):
-        client = self._get_client(server)
+    def nick(self, server_name, nickname):
+        client = self._get_client(server_name)
         if client is None:
             return
 
         return client.setNick(nickname)
 
-    def action(self, server, channel, action):
-        client = self._get_client(server)
+    def action(self, server_name, channel, action):
+        client = self._get_client(server_name)
         if client is None:
             return
 
