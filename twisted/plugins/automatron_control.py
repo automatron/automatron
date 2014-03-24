@@ -3,6 +3,7 @@ from zope.interface import classProvides, implements
 
 from automatron.controller.command import IAutomatronCommandHandler
 from automatron.controller.plugin import IAutomatronPluginFactory
+from automatron.core.event import STOP
 
 
 class AutomatronControlPlugin(object):
