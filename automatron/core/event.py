@@ -42,7 +42,7 @@ class EventManager(object):
             log.msg('Loaded event handler %s' % handler.name)
 
     @defer.inlineCallbacks
-    def emit(self, interface_event_name, *args):
+    def dispatch_event(self, interface_event_name, *args):
         interface_name, event_name = interface_event_name.split('.', 1)
         if not interface_name in self.event_interfaces:
             return

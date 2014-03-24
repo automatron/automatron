@@ -29,4 +29,4 @@ class PluginManager(EventManager):
 
     def emit(self, event, *args):
         interface_event_name = '%s.%s' % (event.interface.getName(), event.getName())
-        super(PluginManager, self).emit(interface_event_name, *args)
+        super(PluginManager, self).dispatch_event(interface_event_name, *args)
