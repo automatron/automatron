@@ -10,6 +10,7 @@ from zope.interface import implements
 from automatron.controller.client import ClientFactory
 from automatron.controller.config import IAutomatronConfigManagerFactory
 from automatron.controller.plugin import PluginManager
+from automatron.controller.router import Router
 from automatron.core.event import IAutomatronEventHandler
 
 
@@ -54,6 +55,7 @@ class Controller(MultiService):
         self.config_file = SafeConfigParser()
         self.config_file.readfp(open(config_file))
 
+        self.router = None
         self.plugins = None
         self.config = None
         self.factories = {}
@@ -63,6 +65,9 @@ class Controller(MultiService):
         # Set up configuration manager
         self.config = self._build_config_manager()
         yield self.config.prepare()
+
+        # Configure ZeroMQ router
+        self.router = Router(self)
 
         # Load plugins
         self.plugins = PluginManager(self)

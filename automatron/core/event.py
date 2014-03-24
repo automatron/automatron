@@ -1,7 +1,11 @@
+from ConfigParser import NoSectionError
+import cPickle
 from twisted.internet import defer
 from twisted.python import log
+from txzmq import ZmqFactory, ZmqEndpoint, ZmqSubConnection
 import zope.interface
 import zope.interface.verify
+from automatron.controller.router import DEFAULT_PUB_ENDPOINT
 
 
 STOP = object()
@@ -20,6 +24,16 @@ class EventManager(object):
         self.controller = controller
         self.event_handlers = []
         self.event_interfaces = {}
+
+        try:
+            config = self.controller.config_file.items('router')
+        except NoSectionError:
+            config = {}
+        zmq_factory = ZmqFactory()
+        pub_endpoint = ZmqEndpoint('connect', config.get('pub-endpoint', DEFAULT_PUB_ENDPOINT))
+        self.zmq_sub = ZmqSubConnection(zmq_factory, pub_endpoint)
+        self.zmq_sub.subscribe('')
+        self.zmq_sub.gotMessage = self.process_message
 
     def register_event_handler(self, handler):
         for event_interface in zope.interface.providedBy(handler):
@@ -75,3 +89,7 @@ class EventManager(object):
             f = getattr(event_handler_adapter, event.getName())
             if (yield defer.maybeDeferred(f, *args)) is STOP:
                 defer.returnValue(STOP)
+
+    def process_message(self, message, tag):
+        args = cPickle.loads(message)
+        self.dispatch_event(tag, *args)
