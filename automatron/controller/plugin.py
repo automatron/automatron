@@ -29,3 +29,7 @@ class PluginManager(EventManager):
                 log.err(e, 'Plugin %s is broken' % plugin_class.__name__)
                 continue
             self.register_event_handler(plugin_class(self.controller))
+
+    def emit(self, event, *args):
+        interface_event_name = '%s.%s' % (event.interface.getName(), event.getName())
+        super(PluginManager, self).emit(interface_event_name, *args)

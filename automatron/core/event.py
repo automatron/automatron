@@ -17,10 +17,18 @@ class EventManager(object):
     def __init__(self, controller):
         self.controller = controller
         self.event_handlers = []
+        self.event_interfaces = {}
 
     def register_event_handler(self, handler):
         for event_interface in zope.interface.providedBy(handler):
             if event_interface.extends(IAutomatronEventHandler):
+                event_interface_name = event_interface.getName()
+                if event_interface_name in self.event_interfaces:
+                    if self.event_interfaces[event_interface_name] is not event_interface:
+                        log.msg('Warning: Duplicate event handler interface name: %s' % event_interface_name)
+                else:
+                    self.event_interfaces[event_interface_name] = event_interface
+
                 try:
                     zope.interface.verify.verifyObject(event_interface, handler)
                 except (zope.interface.verify.BrokenImplementation,
@@ -32,21 +40,27 @@ class EventManager(object):
             log.msg('Loaded event handler %s' % handler.name)
 
     @defer.inlineCallbacks
-    def emit(self, event, *args):
-        event_interface = event.interface
+    def emit(self, interface_event_name, *args):
+        interface_name, event_name = interface_event_name.split('.', 1)
+        if not interface_name in self.event_interfaces:
+            return
+
+        event_interface = self.event_interfaces[interface_name]
+        event = event_interface[event_name]
+
         if not event_interface.extends(IAutomatronEventHandler):
             log.msg('Emitted event %s\'s interface (%s) does not extend IAutomatronEventHandler' %
-                    (event.getName(), event_interface))
+                    (event_name, interface_event_name))
             return
 
         if len(args) < len(event.required):
             log.msg('Emitted event %s\'s declaration requires at least %d arguments, only %d were '
-                    'provided.' % (event.getName(), len(event.required), len(args)))
+                    'provided.' % (interface_event_name, len(event.required), len(args)))
             return
 
         if len(args) > len(event.positional):
             log.msg('Emitted event %s\'s declaration requires at most %d arguments, %d were '
-                    'provided.' % (event.getName(), len(event.positional), len(args)))
+                    'provided.' % (interface_event_name, len(event.positional), len(args)))
             return
 
         event_handlers = sorted(self.event_handlers, key=lambda i: i.priority)
