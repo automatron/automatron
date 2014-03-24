@@ -27,11 +27,23 @@ STOP = object()
 class PluginManager(object):
     def __init__(self, controller):
         self.controller = controller
-        self.plugins = []
-        self.reload()
+        self.event_handlers = []
+        self.load_plugins()
 
-    def reload(self):
-        plugins = []
+    def register_event_handler(self, handler):
+        for event_interface in zope.interface.providedBy(handler):
+            if event_interface.extends(IAutomatronEventHandler):
+                try:
+                    zope.interface.verify.verifyObject(event_interface, handler)
+                except (zope.interface.verify.BrokenImplementation,
+                        zope.interface.verify.BrokenMethodImplementation) as e:
+                    log.err(e, 'Event handler %s is broken' % handler.__name__)
+                    break
+        else:
+            self.event_handlers.append(handler)
+            log.msg('Loaded event handler %s' % handler.name)
+
+    def load_plugins(self):
         plugin_classes = list(getPlugins(IAutomatronPluginFactory))
         for plugin_class in plugin_classes:
             try:
@@ -39,18 +51,7 @@ class PluginManager(object):
             except (zope.interface.verify.BrokenImplementation, zope.interface.verify.BrokenMethodImplementation) as e:
                 log.err(e, 'Plugin %s is broken' % plugin_class.__name__)
                 continue
-            for event_interface in zope.interface.implementedBy(plugin_class):
-                if event_interface.extends(IAutomatronEventHandler):
-                    try:
-                        zope.interface.verify.verifyClass(event_interface, plugin_class)
-                    except (zope.interface.verify.BrokenImplementation,
-                            zope.interface.verify.BrokenMethodImplementation) as e:
-                        log.err(e, 'Plugin %s is broken' % plugin_class.__name__)
-                        break
-            else:
-                plugins.append(plugin_class(self.controller))
-                log.msg('Loaded plugin %s' % plugin_class.name)
-        self.plugins = sorted(plugins, key=lambda i: i.priority)
+            self.register_event_handler(plugin_class(self.controller))
 
     @defer.inlineCallbacks
     def emit(self, event, *args):
@@ -70,12 +71,13 @@ class PluginManager(object):
                     'provided.' % (event.getName(), len(event.positional), len(args)))
             return
 
-        for plugin in self.plugins:
+        event_handlers = sorted(self.event_handlers, key=lambda i: i.priority)
+        for plugin in event_handlers:
             try:
-                plugin_adapter = event_interface(plugin)
+                event_handler_adapter = event_interface(plugin)
             except TypeError:
                 continue
 
-            f = getattr(plugin_adapter, event.getName())
+            f = getattr(event_handler_adapter, event.getName())
             if (yield defer.maybeDeferred(f, *args)) is STOP:
                 defer.returnValue(STOP)
