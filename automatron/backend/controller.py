@@ -1,3 +1,4 @@
+from functools import partial
 from automatron.backend.plugin import PluginManager
 from automatron.controller.controller import IAutomatronClientActions
 from automatron.core.controller import BaseController
@@ -13,6 +14,4 @@ class BackendController(BaseController):
         self.plugins = PluginManager(self)
 
     def __getattr__(self, item):
-        def proxy(*args):
-            self.plugins.emit(IAutomatronClientActions[item], *args)
-        return proxy
+        return partial(self.plugins.emit, IAutomatronClientActions[item])
