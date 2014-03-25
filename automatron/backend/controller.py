@@ -1,4 +1,5 @@
 from automatron.backend.plugin import PluginManager
+from automatron.controller.controller import IAutomatronClientActions
 from automatron.core.controller import BaseController
 
 
@@ -10,3 +11,8 @@ class BackendController(BaseController):
     def prepareService(self):
         # Load plugins
         self.plugins = PluginManager(self)
+
+    def __getattr__(self, item):
+        def proxy(*args):
+            self.plugins.emit(IAutomatronClientActions[item], *args)
+        return proxy
