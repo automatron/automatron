@@ -1,7 +1,6 @@
 from twisted.internet import defer
 from zope.interface import implements, classProvides
 
-from automatron.controller.controller import IAutomatronClientActions
 from automatron.backend.plugin import IAutomatronPluginFactory
 from automatron.controller.client import IAutomatronChannelJoinedHandler
 
@@ -25,11 +24,11 @@ class JoinMessagePlugin(object):
         action, action_rel = yield self.controller.config.get_plugin_value(self, server['server'], channel, 'action')
 
         if message is not None and (action is None or message_rel > action_rel):
-            f = IAutomatronClientActions['message']
+            f = self.controller.message
         elif action is not None:
-            f = IAutomatronClientActions['action']
+            f = self.controller.action
             message = action
         else:
             return
 
-        self.controller.plugins.emit(f, server['server'], channel, message % server)
+        f(server['server'], channel, message % server)

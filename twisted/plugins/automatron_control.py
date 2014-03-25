@@ -2,7 +2,6 @@ from twisted.internet import defer
 from zope.interface import classProvides, implements
 
 from automatron.backend.command import IAutomatronCommandHandler
-from automatron.controller.controller import IAutomatronClientActions
 from automatron.backend.plugin import IAutomatronPluginFactory
 from automatron.core.event import STOP
 
@@ -36,21 +35,11 @@ class AutomatronControlPlugin(object):
 
         if config[3] is not None:
             if not (yield self.controller.config.has_permission(server['server'], None, user, config[3])):
-                self.controller.plugins.emit(
-                    IAutomatronClientActions['message'],
-                    server['server'],
-                    user,
-                    'You\'re not authorized to do that.'
-                )
+                self.controller.message(server['server'], user, 'You\'re not authorized to do that.')
                 return
 
         if not config[1] <= len(args) <= config[2]:
-            self.controller.plugins.emit(
-                IAutomatronClientActions['message'],
-                server['server'],
-                user,
-                'Invalid syntax. Use: %s %s' % (command, config[0])
-            )
+            self.controller.message(server['server'], user, 'Invalid syntax. Use: %s %s' % (command, config[0]))
             return
 
         getattr(self, '_on_command_%s' % command)(server, user, *args)
@@ -62,32 +51,13 @@ class AutomatronControlPlugin(object):
         else:
             key = yield self.controller.config.get_value('channel', server['server'], channel, 'key')
 
-        self.controller.plugins.emit(
-            IAutomatronClientActions['join'],
-            server['server'],
-            channel,
-            key
-        )
+        self.controller.join(server['server'], channel, key)
 
     def _on_command_leave(self, server, user, channel, reason='Leaving...'):
-        self.controller.plugins.emit(
-            IAutomatronClientActions['leave'],
-            server['server'],
-            channel,
-            reason
-        )
+        self.controller.leave(server['server'], channel, reason)
 
     def _on_command_say(self, server, user, channel, message):
-        self.controller.plugins.emit(
-            IAutomatronClientActions['message'],
-            server['server'],
-            channel,
-            message
-        )
+        self.controller.message(server['server'], channel, message)
 
     def _on_command_nickname(self, server, user, nickname):
-        self.controller.plugins.emit(
-            IAutomatronClientActions['nick'],
-            server['server'],
-            nickname
-        )
+        self.controller.nick(server['server'], nickname)

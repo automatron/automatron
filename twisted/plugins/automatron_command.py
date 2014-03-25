@@ -5,7 +5,6 @@ from twisted.python import log
 from zope.interface import implements, classProvides
 
 from automatron.backend.command import IAutomatronCommandHandler
-from automatron.controller.controller import IAutomatronClientActions
 from automatron.backend.plugin import IAutomatronPluginFactory
 from automatron.controller.client import IAutomatronMessageHandler
 from automatron.core.event import STOP
@@ -30,12 +29,7 @@ class CommandMessagePlugin(object):
         try:
             args = shlex.split(message)
         except ValueError as e:
-            self.controller.plugins.emit(
-                IAutomatronClientActions['message'],
-                server['server'],
-                user,
-                'Invalid syntax: %s' % str(e)
-            )
+            self.controller.message(server['server'], user, 'Invalid syntax: %s' % str(e))
             log.err(e, 'Unable to parse command')
             defer.returnValue(STOP)
 

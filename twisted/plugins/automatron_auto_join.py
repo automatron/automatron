@@ -1,7 +1,6 @@
 from twisted.internet import defer, reactor
 from zope.interface import implements, classProvides
 
-from automatron.controller.controller import IAutomatronClientActions
 from automatron.backend.plugin import IAutomatronPluginFactory
 from automatron.controller.client import IAutomatronSignedOnHandler, IAutomatronChannelJoinedHandler,\
     IAutomatronChannelLeftHandler, IAutomatronChannelKickedHandler
@@ -35,7 +34,7 @@ class AutoJoinPlugin(object):
     @defer.inlineCallbacks
     def _join_channel(self, server, channel):
         channel_key = yield self.controller.config.get_value('channel', server['server'], channel, 'key')
-        self.controller.plugins.emit(IAutomatronClientActions['join'], server['server'], channel, channel_key)
+        self.controller.join(server['server'], channel, channel_key)
 
     def on_channel_joined(self, server, channel):
         self._on_channel_joined(server, channel)
