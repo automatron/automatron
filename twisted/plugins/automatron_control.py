@@ -22,6 +22,8 @@ class AutomatronControlPlugin(object):
         'leave': ('<channel> [reason]', 1, 2, 'channel'),
         'say': ('<channel> <message>', 2, 2, 'say'),
         'nickname': ('<nickname>', 1, 1, 'admin'),
+        'op': ('<channel> <nickname>', 2, 2, 'admin'),
+        'invite': ('<channel> <nickname>', 2, 2, 'admin'),
     }
 
     def on_command(self, server, user, command, args):
@@ -61,3 +63,9 @@ class AutomatronControlPlugin(object):
 
     def _on_command_nickname(self, server, user, nickname):
         self.controller.nick(server['server'], nickname)
+
+    def _on_command_op(self, server, user, channel, nickname):
+        self.controller.mode(server['server'], channel, True, 'o', None, nickname)
+
+    def _on_command_invite(self, server, user, channel, nickname):
+        self.controller.invite(server['server'], channel, nickname)

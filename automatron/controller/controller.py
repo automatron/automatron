@@ -37,6 +37,16 @@ class IAutomatronClientActions(IAutomatronEventHandler):
         Change nickname.
         """
 
+    def mode(server_name, channel, set, modes, limit=None, user=None, mask=None):
+        """
+        Change the modes on a user or channel.
+        """
+
+    def invite(server_name, channel, nickname):
+        """
+        Invite a user to a channel.
+        """
+
 
 class Controller(BaseController):
     implements(IAutomatronClientActions)
@@ -125,3 +135,17 @@ class Controller(BaseController):
             return
 
         return client.describe(channel, action)
+
+    def mode(self, server_name, channel, set, modes, limit=None, user=None, mask=None):
+        client = self._get_client(server_name)
+        if client is None:
+            return
+
+        return client.mode(channel, set, modes, limit, user, mask)
+
+    def invite(self, server_name, channel, nickname):
+        client = self._get_client(server_name)
+        if client is None:
+            return
+
+        return client.invite(channel, nickname)
