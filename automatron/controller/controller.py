@@ -1,5 +1,5 @@
 from twisted.application import internet
-from twisted.internet import defer
+from twisted.internet import defer, ssl
 from twisted.python import log
 from zope.interface import implements
 from automatron.controller.client import ClientFactory
@@ -71,7 +71,12 @@ class Controller(BaseController):
 
             server_hostname = server_config['hostname']
             server_port = server_config.get('port', DEFAULT_PORT)
-            connector = internet.TCPClient(server_hostname, server_port, factory)
+            server_ssl = server_config.get('ssl', False)
+            if not server_ssl:
+                connector = internet.TCPClient(server_hostname, server_port, factory)
+            else:
+                ctx = ssl.ClientContextFactory()
+                connector = internet.SSLClient(server_hostname, server_port, factory, ctx)
             connector.setServiceParent(self)
 
     def _get_client(self, server):
